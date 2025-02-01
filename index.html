@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat App</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #f8f9fa;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      #chat-container {
+        width: 400px;
+        display: flex;
+        flex-direction: column;
+        height: 80vh;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      #messages {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        list-style: none;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #messages > li {
+        padding: 0.75rem;
+        border-radius: 15px;
+        max-width: 75%;
+        word-wrap: break-word;
+        margin-bottom: 0.5rem;
+      }
+
+      .sent {
+        align-self: flex-end;
+        background-color: #007bff;
+        color: white;
+        text-align: right;
+      }
+
+      .received {
+        align-self: flex-start;
+        background-color: #e9ecef;
+        text-align: left;
+      }
+
+      #form {
+        display: flex;
+        padding: 10px;
+        background: white;
+        border-top: 1px solid #ddd;
+      }
+
+      #input {
+        flex-grow: 1;
+        border-radius: 20px;
+        border: 1px solid #ccc;
+        padding: 0.5rem 1rem;
+        outline: none;
+      }
+
+      #form button {
+        background: #007bff;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        color: white;
+        margin-left: 10px;
+        cursor: pointer;
+      }
+
+      #form button:hover {
+        background: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chat-container">
+      <ul id="messages"></ul>
+      <form id="form">
+        <input id="input" autocomplete="off" placeholder="Type a message..." />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+    
+    <!-- Include socket.io client script -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+      var messages = document.getElementById("messages");
+      var form = document.getElementById("form");
+      var input = document.getElementById("input");
+
+      let userId = Math.random().toString(36).substr(2, 9); // Unique ID for each user
+
+      // Send message on form submit
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (input.value.trim()) {
+          let msgData = { id: userId, message: input.value };
+          socket.emit("chat message", msgData); // Send message to server
+          addMessage(input.value, "sent"); // Display own message on the right
+          input.value = ""; // Clear input
+        }
+      });
+
+      // Listen for messages from the server
+      socket.on("chat message", function (msgData) {
+        if (msgData.id !== userId) {
+          addMessage(msgData.message, "received"); // Display other user messages on the left
+        }
+      });
+
+      // Function to append messages
+      function addMessage(msg, type) {
+        var item = document.createElement("li");
+        item.classList.add(type);
+        item.textContent = msg;
+        messages.appendChild(item);
+        messages.scrollTop = messages.scrollHeight; // Auto scroll
+      }
+    </script>
+  </body>
+</html>
